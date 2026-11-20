@@ -438,6 +438,16 @@ input[type="date"].input {
   color: var(--warning-text);
 }
 
+.note--success {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: var(--success-soft);
+  max-width: none;
+}
+
+.note--success .icon {
+  color: var(--success-text);
+}
+
 /* ---------- Asistente ---------- */
 .assistant {
   display: grid;

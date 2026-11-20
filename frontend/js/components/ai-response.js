@@ -66,6 +66,20 @@ const meter = (value, label) => `
     <span class="meter__value">${formatRatio(value)}</span>
   </span>`;
 
+const NIVELES = { ALTO: ['Alto', 'success'], MEDIO: ['Medio', 'warning'], BAJO: ['Bajo', 'danger'] };
+
+// Respaldo documental calculado en el backend
+export function confidenceHtml(ci) {
+  if (!ci) return '';
+  if (!ci.sufficientEvidence) {
+    return `<div class="note note--warning">${icon('i-info')}<span><strong>Respaldo documental: insuficiente (0/100).</strong>
+      No hay fuentes con similitud suficiente.</span></div>`;
+  }
+  const [label, tone] = NIVELES[ci.level] ?? NIVELES.BAJO;
+  return `<div class="note note--${tone}">${icon('i-info')}<span><strong>Respaldo documental: ${label} (${ci.index}/100).</strong>
+    ${ci.usedSources} fuente(s), similitud promedio ${formatRatio(ci.averageSimilarity)}. Es una medida heurística, no la probabilidad de que la solución sea correcta.</span></div>`;
+}
+
 // List of the sources used by the AI, most similar first
 function sourcesHtml(sources) {
   const sorted = [...sources].sort((a, b) => (b.similarityScore ?? 0) - (a.similarityScore ?? 0));
@@ -231,6 +245,7 @@ function contentHtml(query, status) {
 
   if (status === 'NO_RESULTS') {
     return `
+      ${confidenceHtml(response.confidenceIndicator)}
       <div class="note note--warning">${icon('i-info')}<span><strong>Información insuficiente.</strong>
         No se encontraron documentos verificados suficientemente relevantes, así que el asistente no propone una solución.
         Conviene escalar el incidente a un técnico o documentar el caso en la base de conocimiento.</span></div>
@@ -243,6 +258,7 @@ function contentHtml(query, status) {
       <div><span class="detail-label">Fuentes</span><span>${response.sources.length}</span></div>
       <div><span class="detail-label">Tiempo de respuesta</span><span>${response.processingTimeMs != null ? `${(response.processingTimeMs / 1000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} s` : '—'}</span></div>
     </div>
+    ${confidenceHtml(response.confidenceIndicator)}
     ${parts.explanation ? section(1, 'Diagnóstico orientativo', `<p class="detail-text">${escapeHtml(parts.explanation)}</p>`) : ''}
     ${parts.solution ? section(2, 'Solución sugerida', `<p class="detail-text ai-solution">${escapeHtml(parts.solution)}</p>`) : ''}
     ${section(3, 'Pasos recomendados', parts.steps.length
