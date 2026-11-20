@@ -28,7 +28,17 @@ public record AiQueryHistoryResponseDTO(
             Long processingTimeMs,
             LocalDateTime respondedAt,
             List<SourceSummaryDTO> sources,
-            RatingSummaryDTO rating
+            RatingSummaryDTO rating,
+            ConfidenceIndicatorDTO confidenceIndicator
+    ) {}
+
+    // Heuristic index (0-100) calculated in the backend from the sources
+    public record ConfidenceIndicatorDTO(
+            Integer index,
+            String level,
+            Integer usedSources,
+            Double averageSimilarity,
+            Boolean sufficientEvidence
     ) {}
 
     // Summary of each source document with its semantic similarity score

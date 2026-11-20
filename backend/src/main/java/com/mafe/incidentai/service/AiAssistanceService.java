@@ -9,6 +9,7 @@ import com.mafe.incidentai.exception.BusinessRuleException;
 import com.mafe.incidentai.exception.ResourceNotFoundException;
 import com.mafe.incidentai.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,9 @@ public class AiAssistanceService {
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
     private final N8nWebhookClient n8nWebhookClient;
+
+    @Value("${rag.score-threshold:0.55}")
+    private double scoreThreshold;
 
     // 1. Records the AI query as PENDING, calls the n8n webhook and sets COMMUNICATION_ERROR if that fails
     @Transactional
@@ -286,7 +290,10 @@ public class AiAssistanceService {
                     response.getProcessingTimeMs(),
                     response.getRespondedAt(),
                     sourceSummaries,
-                    ratingSummary
+                    ratingSummary,
+                    ConfidenceIndicator.calculate(
+                            sourceSummaries.stream().map(AiQueryHistoryResponseDTO.SourceSummaryDTO::similarityScore).toList(),
+                            scoreThreshold)
             );
         }
 
